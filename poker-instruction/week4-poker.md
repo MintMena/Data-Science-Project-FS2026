@@ -16,7 +16,7 @@ Plan for about ~ 2 hours.
  
 ---
 
-![poker-fold](images/poker-fold)
+![poker-fold](images/poker-fold.jpg)
  
 ## Step 1: Set Up
  
