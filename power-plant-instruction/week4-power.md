@@ -38,7 +38,7 @@ For gradient boosting, look at `n_estimators`, `learning_rate`, and `max_depth`.
 
 ## Step 2: Tune Random Forest with Cross-Validation
 
-![random-forest](random-forest.jpg)
+![random-forest](images/random-forest.jpg)
 
 - Open `notebook` folder
 - Click **New → Python 3 (ipykernel)**
