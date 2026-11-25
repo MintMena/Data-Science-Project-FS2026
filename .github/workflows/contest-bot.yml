@@ -2,7 +2,9 @@ name: Contest bot
 
 on:
   issues:
-    types: [opened, edited, closed, reopened, labeled, unlabeled]
+    types: [opened, edited, reopened]
+  # Rebuild TRACKER.md by hand: Actions -> Contest bot -> Run workflow
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -16,8 +18,8 @@ jobs:
        startsWith(github.event.issue.title, '[Check-in]'))
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - run: pip install -r grader/requirements.txt
@@ -39,8 +41,8 @@ jobs:
        startsWith(github.event.issue.title, '[Submission]'))
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - run: pip install -r grader/requirements.txt
@@ -67,7 +69,8 @@ jobs:
     needs: [checkin, submission]
     if: >-
       always() &&
-      (contains(github.event.issue.labels.*.name, 'check-in') ||
+      (github.event_name == 'workflow_dispatch' ||
+       contains(github.event.issue.labels.*.name, 'check-in') ||
        contains(github.event.issue.labels.*.name, 'submission') ||
        startsWith(github.event.issue.title, '[Check-in]') ||
        startsWith(github.event.issue.title, '[Submission]'))
@@ -76,10 +79,10 @@ jobs:
       group: rebuild-tracker
       cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - run: pip install -r grader/requirements.txt
@@ -90,7 +93,5 @@ jobs:
           gh api --paginate "repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100" \
             --jq '.[] | select(.pull_request == null) | {number, title, body, created_at, login: .user.login, labels: [.labels[].name]}' \
             > "$RUNNER_TEMP/issues.jsonl"
-      - name: Rebuild the tracker
-        run: python grader/rebuild.py "$RUNNER_TEMP/issues.jsonl"
-      - name: Commit
-        run: bash grader/commit.sh "Update tracker"
+      - name: Rebuild the tracker and commit
+        run: bash grader/commit.sh "Update tracker" python grader/rebuild.py "$RUNNER_TEMP/issues.jsonl"

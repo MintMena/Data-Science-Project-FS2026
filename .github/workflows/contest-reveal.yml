@@ -16,10 +16,10 @@ jobs:
   reveal:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - run: pip install -r grader/requirements.txt
@@ -30,10 +30,8 @@ jobs:
           gh api --paginate "repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100" \
             --jq '.[] | select(.pull_request == null) | {number, title, body, created_at, login: .user.login, labels: [.labels[].name]}' \
             > "$RUNNER_TEMP/issues.jsonl"
-      - name: Score the submissions
+      - name: Score the submissions and commit
         env:
           GH_TOKEN: ${{ github.token }}
           HIDDEN_ANSWERS: ${{ secrets.HIDDEN_ANSWERS }}
-        run: python grader/reveal.py "$RUNNER_TEMP/issues.jsonl"
-      - name: Commit
-        run: bash grader/commit.sh "Reveal leaderboard"
+        run: bash grader/commit.sh "Reveal leaderboard" python grader/reveal.py "$RUNNER_TEMP/issues.jsonl"
