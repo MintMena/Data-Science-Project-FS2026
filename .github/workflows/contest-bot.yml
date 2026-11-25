@@ -1,0 +1,96 @@
+name: Contest bot
+
+on:
+  issues:
+    types: [opened, edited, closed, reopened, labeled, unlabeled]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  checkin:
+    if: >-
+      github.event.action == 'opened' &&
+      (contains(github.event.issue.labels.*.name, 'check-in') ||
+       startsWith(github.event.issue.title, '[Check-in]'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r grader/requirements.txt
+      - name: Check the form
+        working-directory: grader
+        run: python checkin.py
+      - name: Reply and close
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh issue comment "$NUMBER" --repo "$GITHUB_REPOSITORY" --body-file grader/reply.md
+          gh issue close "$NUMBER" --repo "$GITHUB_REPOSITORY" --reason completed
+
+  submission:
+    if: >-
+      (github.event.action == 'opened' || github.event.action == 'edited') &&
+      (contains(github.event.issue.labels.*.name, 'submission') ||
+       startsWith(github.event.issue.title, '[Submission]'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r grader/requirements.txt
+      - name: Check the file format
+        id: check
+        working-directory: grader
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python submission.py
+      - name: Label, reply and close
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ github.event.issue.number }}
+          RESULT: ${{ steps.check.outputs.result }}
+        run: |
+          gh label create valid --repo "$GITHUB_REPOSITORY" --color 2da44e --description "Contest file passed the format check" --force
+          gh label create invalid --repo "$GITHUB_REPOSITORY" --color d73a4a --description "Contest file failed the format check" --force
+          gh issue edit "$NUMBER" --repo "$GITHUB_REPOSITORY" --remove-label valid --remove-label invalid || true
+          gh issue edit "$NUMBER" --repo "$GITHUB_REPOSITORY" --add-label "$RESULT"
+          gh issue comment "$NUMBER" --repo "$GITHUB_REPOSITORY" --body-file grader/reply.md
+          gh issue close "$NUMBER" --repo "$GITHUB_REPOSITORY" --reason completed
+
+  rebuild:
+    needs: [checkin, submission]
+    if: >-
+      always() &&
+      (contains(github.event.issue.labels.*.name, 'check-in') ||
+       contains(github.event.issue.labels.*.name, 'submission') ||
+       startsWith(github.event.issue.title, '[Check-in]') ||
+       startsWith(github.event.issue.title, '[Submission]'))
+    runs-on: ubuntu-latest
+    concurrency:
+      group: rebuild-tracker
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r grader/requirements.txt
+      - name: Download every issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --paginate "repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100" \
+            --jq '.[] | select(.pull_request == null) | {number, title, body, created_at, login: .user.login, labels: [.labels[].name]}' \
+            > "$RUNNER_TEMP/issues.jsonl"
+      - name: Rebuild the tracker
+        run: python grader/rebuild.py "$RUNNER_TEMP/issues.jsonl"
+      - name: Commit
+        run: bash grader/commit.sh "Update tracker"

@@ -1,0 +1,10 @@
+# Never upload the contest answers
+secret.txt
+*_hidden.csv
+*_hidden_answers.csv
+NEVER-upload/
+
+# Mac and Python clutter
+.DS_Store
+__pycache__/
+.ipynb_checkpoints/

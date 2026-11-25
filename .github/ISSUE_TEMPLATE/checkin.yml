@@ -1,0 +1,60 @@
+name: Weekly check-in
+description: Tell the project managers you finished this week's guide (1 minute).
+title: "[Check-in]"
+labels: ["check-in"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for checking in! A bot will reply in about a minute.
+        Everything you write here is **public**, so a first name or nickname is fine.
+  - type: dropdown
+    id: project
+    attributes:
+      label: Project
+      options:
+        - Poker Hand
+        - Real Estate
+        - Power Plant
+        - Heart Failure
+    validations:
+      required: true
+  - type: dropdown
+    id: week
+    attributes:
+      label: Week
+      description: The guide you just finished.
+      options:
+        - Week 01
+        - Week 02
+        - Week 03
+        - Week 04
+        - Week 05
+        - Week 06
+    validations:
+      required: true
+  - type: input
+    id: name
+    attributes:
+      label: Your name
+      description: First name or nickname, as it should show on the leaderboard.
+    validations:
+      required: true
+  - type: dropdown
+    id: contest
+    attributes:
+      label: Joining the model contest?
+      description: Will you submit a model for the contest at the end of the semester?
+      options:
+        - "Yes"
+        - Maybe
+        - "No"
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything blocking you? (optional)
+      description: Stuck on a step? Tell us and a project manager will help.
+    validations:
+      required: false

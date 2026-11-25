@@ -1,0 +1,39 @@
+name: Reveal leaderboard
+
+# Run this by hand at the meeting: Actions -> Reveal leaderboard -> Run workflow.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: read
+
+concurrency:
+  group: reveal-leaderboard
+  cancel-in-progress: false
+
+jobs:
+  reveal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r grader/requirements.txt
+      - name: Download every issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --paginate "repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100" \
+            --jq '.[] | select(.pull_request == null) | {number, title, body, created_at, login: .user.login, labels: [.labels[].name]}' \
+            > "$RUNNER_TEMP/issues.jsonl"
+      - name: Score the submissions
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HIDDEN_ANSWERS: ${{ secrets.HIDDEN_ANSWERS }}
+        run: python grader/reveal.py "$RUNNER_TEMP/issues.jsonl"
+      - name: Commit
+        run: bash grader/commit.sh "Reveal leaderboard"

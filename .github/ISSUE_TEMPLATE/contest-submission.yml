@@ -1,0 +1,42 @@
+name: Model contest submission
+description: Submit your predictions on the hidden data for the model contest.
+title: "[Submission]"
+labels: ["submission"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A bot checks your file and replies within a few minutes.
+        You can submit again with a new form. Only your **latest valid** file before the deadline counts.
+  - type: dropdown
+    id: project
+    attributes:
+      label: Project
+      options:
+        - Poker Hand
+        - Real Estate
+        - Power Plant
+        - Heart Failure
+    validations:
+      required: true
+  - type: input
+    id: name
+    attributes:
+      label: Your name
+      description: First name or nickname, as it should show on the leaderboard.
+    validations:
+      required: true
+  - type: textarea
+    id: file
+    attributes:
+      label: Your file
+      description: Drag `contest_submission.csv` into this box and wait until the link appears.
+    validations:
+      required: true
+  - type: checkboxes
+    id: honesty
+    attributes:
+      label: Honesty
+      options:
+        - label: I made these predictions with my own model, and I didn't use the test or hidden answers to train it.
+          required: true
