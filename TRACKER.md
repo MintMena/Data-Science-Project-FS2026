@@ -1,7 +1,5 @@
 # Project Tracker
 
-_Updated automatically on Nov 24, 2026 at 09:18 PM (Detroit time) from check-in and submission issues._
-
 ## Who checked in each week
 
 Number of different students per project and week.
@@ -16,9 +14,11 @@ Number of different students per project and week.
 
 ## Model contest
 
-Contest answer = each student's latest check-in. Valid files = students with at least one file that passed the format check.
+Contest answer = each latest check-in. 
 
-| Project | Yes | Maybe | No | Valid files | Prize? (needs 3+) |
+Valid files = students with at least one file that passed the format check.
+
+| Project | Yes | Maybe | No | Valid files | Prize (TBD) |
 |---|---|---|---|---|---|
 | Poker Hand | 0 | 0 | 0 | 0 | Not yet |
 | Real Estate | 0 | 0 | 0 | 0 | Not yet |
